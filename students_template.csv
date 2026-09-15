@@ -1,0 +1,5 @@
+name,roll_no,branch,room_id,rfid_uid,photo_path
+Raj Kumar,2020001,CSE,1,A1B2C3D4,photos/raj.jpg
+Priya Sharma,2020002,CSE,1,E5F6G7H8,photos/priya.jpg
+Amit Patel,2020003,ECE,2,I9J0K1L2,photos/amit.jpg
+Neha Singh,2020004,ECE,2,M3N4O5P6,photos/neha.jpg

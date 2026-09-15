@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartPresence — Admin Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+        }
+
+        /* Header */
+        .header {
+            background: #1a1a2e;
+            color: white;
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 { font-size: 20px; }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 13px;
+            color: white;
+        }
+
+        .btn-red    { background: #e74c3c; }
+        .btn-blue   { background: #3498db; }
+        .btn-green  { background: #27ae60; }
+        .btn-orange { background: #e67e22; }
+
+        /* Stats Bar */
+        .stats-bar {
+            background: white;
+            padding: 15px 25px;
+            display: flex;
+            gap: 15px;
+            border-bottom: 2px solid #ddd;
+            flex-wrap: wrap;
+        }
+
+        .stat-box {
+            text-align: center;
+            padding: 10px 20px;
+            border-radius: 8px;
+            min-width: 110px;
+        }
+
+        .stat-box.total   { background: #e8f4fd; color: #1a5276; }
+        .stat-box.present { background: #d4edda; color: #155724; }
+        .stat-box.out     { background: #fff3cd; color: #856404; }
+        .stat-box.absent  { background: #f8d7da; color: #721c24; }
+
+        .stat-box .number { font-size: 26px; font-weight: bold; }
+        .stat-box .label  { font-size: 11px; margin-top: 3px; }
+
+        /* Main Tabs (Left Side / Right Side) */
+        .main-tabs {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid #1a1a2e;
+            padding: 0 25px;
+        }
+
+        .main-tab {
+            padding: 14px 30px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+
+        .main-tab:hover { color: #1a1a2e; }
+
+        .main-tab.active {
+            color: #1a1a2e;
+            border-bottom: 3px solid #1a1a2e;
+        }
+
+        /* Side Content */
+        .side-content { display: none; padding: 20px 25px; }
+        .side-content.active { display: block; }
+
+        /* Side Counter */
+        .side-counter {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .side-counter.safe    { background: #d4edda; color: #155724; }
+        .side-counter.warning { background: #fff3cd; color: #856404; }
+        .side-counter.danger  { background: #f8d7da; color: #721c24; }
+
+        /* Room Sub-Tabs */
+        .room-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .room-tab {
+            padding: 10px 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px 8px 0 0;
+            transition: all 0.2s;
+        }
+
+        .room-tab:hover { color: #1a1a2e; border-color: #1a1a2e; }
+
+        .room-tab.active {
+            color: white;
+            background: #1a1a2e;
+            border-color: #1a1a2e;
+        }
+
+        /* Room Content */
+        .room-content {
+            display: none;
+            background: white;
+            border-radius: 0 8px 8px 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .room-content.active { display: block; }
+
+        /* Section inside room */
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: bold;
+            color: #1a1a2e;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #1a1a2e;
+            border-radius: 0 5px 5px 0;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            background: #1a1a2e;
+            color: white;
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 9px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+
+        tr:hover td { background: #f9f9f9; }
+        tr:last-child td { border-bottom: none; }
+
+        /* Status badges */
+        .badge {
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .badge-present { background: #d4edda; color: #155724; }
+        .badge-out     { background: #fff3cd; color: #856404; }
+        .badge-absent  { background: #f8d7da; color: #721c24; }
+
+        /* Print buttons */
+        .print-btn {
+            padding: 6px 14px;
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .print-btn:hover { background: #16213e; }
+
+        /* Live dot */
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #28a745;
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Print styles */
+        @media print {
+            .header, .stats-bar, .main-tabs,
+            .room-tabs, .print-btn, .btn { display: none !important; }
+
+            .room-content { display: block !important; box-shadow: none; }
+            .side-content { display: block !important; }
+            .section { page-break-inside: avoid; }
+        }
+
+        .no-data {
+            text-align: center;
+            color: #aaa;
+            padding: 20px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+    <h1>🛡️ SmartPresence — Admin Panel</h1>
+    <div class="header-right">
+        <span class="live-dot"></span>
+        <span style="font-size:12px;" id="last-updated">Live</span>
+        <span style="font-size:14px;">👤 {{ username }}</span>
+        <a href="/export/attendance" class="btn btn-green">⬇ Export Attendance</a>
+        <a href="/export/washroom" class="btn btn-orange">⬇ Export Washroom</a>
+        <a href="/logout" class="btn btn-red">Logout</a>
+    </div>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+    <div class="stat-box total">
+        <div class="number">{{ total }}</div>
+        <div class="label">📋 Total</div>
+    </div>
+    <div class="stat-box present">
+        <div class="number" id="stat-present">{{ present }}</div>
+        <div class="label">✅ Present</div>
+    </div>
+    <div class="stat-box out">
+        <div class="number" id="stat-washroom">{{ washroom }}</div>
+        <div class="label">🚻 Washroom</div>
+    </div>
+    <div class="stat-box absent">
+        <div class="number" id="stat-absent">{{ absent }}</div>
+        <div class="label">❌ Not Arrived</div>
+    </div>
+</div>
+
+<!-- Main Tabs: Left Side / Right Side -->
+<div class="main-tabs">
+    <div class="main-tab active" onclick="showSide('left')">
+        🏫 LEFT SIDE (Room 1 + 2)
+    </div>
+    <div class="main-tab" onclick="showSide('right')">
+        🏫 RIGHT SIDE (Room 3 + 4)
+    </div>
+</div>
+
+<!-- ═══════════════ LEFT SIDE ═══════════════ -->
+<div class="side-content active" id="side-left">
+
+    <!-- Side Counter -->
+    <div class="side-counter {{ 'safe' if outside_left == 0 else 'warning' if outside_left == 1 else 'danger' }}"
+         id="left-counter">
+        LEFT SIDE: {{ outside_left }}/2 students bahar
+    </div>
+
+    <!-- Room Sub-Tabs -->
+    <div class="room-tabs">
+        <div class="room-tab active" onclick="showRoom('left', 1)">Room 1</div>
+        <div class="room-tab" onclick="showRoom('left', 2)">Room 2</div>
+    </div>
+
+    <!-- Room 1 Content -->
+    <div class="room-content active" id="left-room-1">
+
+        <!-- Attendance Section -->
+        <div class="section">
+            <div class="section-title">
+                <span>📋 Room 1 — Attendance Record</span>
+                <button class="print-btn" onclick="printSection('left-room-1-attendance')">
+                    🖨 Print
+                </button>
+            </div>
+            <div id="left-room-1-attendance">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Roll No</th>
+                            <th>Branch</th>
+                            <th>Status</th>
+                            <th>Entry Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-1">
+                        {% for student in all_rooms[1] %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ student.name }}</td>
+                            <td>{{ student.roll_no }}</td>
+                            <td>{{ student.branch }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if student.status == 'PRESENT' %}badge-present
+                                    {% elif student.status == 'OUT (WASHROOM)' %}badge-out
+                                    {% else %}badge-absent{% endif %}">
+                                    {% if student.status == 'PRESENT' %}✅ Present
+                                    {% elif student.status == 'OUT (WASHROOM)' %}🚻 Washroom
+                                    {% else %}❌ Not Arrived{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ student.entry_time or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Washroom Section -->
+        <div class="section">
+            <div class="section-title">
+                <span>🚻 Room 1 — Washroom Log</span>
+                <button class="print-btn" onclick="printSection('left-room-1-washroom')">
+                    🖨 Print
+                </button>
+            </div>
+            <div id="left-room-1-washroom">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Branch</th>
+                            <th>Out Time</th>
+                            <th>In Time</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="washroom-1">
+                        {% for log in washroom_logs[1] %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ log.name }}</td>
+                            <td>{{ log.branch }}</td>
+                            <td>{{ log.out_time }}</td>
+                            <td>{{ log.in_time or 'Still Outside' }}</td>
+                            <td>{{ log.duration or '—' }}</td>
+                            <td>
+                                <span class="badge {{ 'badge-present' if log.status == 'IN' else 'badge-out' }}">
+                                    {{ '✅ Returned' if log.status == 'IN' else '🚻 Outside' }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="no-data">
+                                Koi washroom record nahi aaj ke liye
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room 2 Content -->
+    <div class="room-content" id="left-room-2">
+
+        <!-- Attendance Section -->
+        <div class="section">
+            <div class="section-title">
+                <span>📋 Room 2 — Attendance Record</span>
+                <button class="print-btn" onclick="printSection('left-room-2-attendance')">
+                    🖨 Print
+                </button>
+            </div>
+            <div id="left-room-2-attendance">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Roll No</th>
+                            <th>Branch</th>
+                            <th>Status</th>
+                            <th>Entry Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendance-2">
+                        {% for student in all_rooms[2] %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ student.name }}</td>
+                            <td>{{ student.roll_no }}</td>
+                            <td>{{ student.branch }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if student.status == 'PRESENT' %}badge-present
+                                    {% elif student.status == 'OUT (WASHROOM)' %}badge-out
+                                    {% else %}badge-absent{% endif %}">
+                                    {% if student.status == 'PRESENT' %}✅ Present
+                                    {% elif student.status == 'OUT (WASHROOM)' %}🚻 Washroom
+                                    {% else %}❌ Not Arrived{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ student.entry_time or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Washroom Section -->
+        <div class="section">
+            <div class="section-title">
+                <span>🚻 Room 2 — Washroom Log</span>
+                <button class="print-btn" onclick="printSection('left-room-2-washroom')">
+                    🖨 Print
+                </button>
+            </div>
+            <div id="left-room-2-washroom">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Branch</th>
+                            <th>Out Time</th>
+                            <th>In Time</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="washroom-2">
+                        {% for log in washroom_logs[2] %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ log.name }}</td>
+                            <td>{{ log.branch }}</td>
+                            <td>{{ log.out_time }}</td>
+                            <td>{{ log.in_time or 'Still Outside' }}</td>
+                            <td>{{ log.duration or '—' }}</td>
+                            <td>
+                                <span class="badge {{ 'badge-present' if log.status == 'IN' else 'badge-out' }}">
+                                    {{ '✅ Returned' if log.status == 'IN' else '🚻 Outside' }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="no-data">
+                                Koi washroom record nahi aaj ke liye
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--RIGHT SIDE -->
+<div class="side-content" id="side-right">
+
+    <!-- Side Counter -->
+    <div class="side-counter {{ 'safe' if outside_right == 0 else 'warning' if outside_right == 1 else 'danger' }}"
+         id="right-counter">
+        RIGHT SIDE: {{ outside_right }}/2 students bahar
+    </div>
+
+    <!-- Room Sub-Tabs -->
+    <div class="room-tabs">
+        <div class="room-tab active" onclick="showRoom('right', 3)">Room 3</div>
+        <div class="room-tab" onclick="showRoom('right', 4)">Room 4</div>
+    </div>
+
+    <!-- Room 3 Content -->
+    <div class="room-content active" id="right-room-3">
+
+        <!-- Attendance Section -->
+        <div class="section">
+            <div class="section-title">
+                <span>📋 Room 3 — Attendance Record</span>
+                <button class="print-btn" onclick="printSection('right-room-3-attendance')">
+                    🖨 Print
+                </button>
+            </div>
+            <div id="right-room-3-attendance">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Roll No</th>
+                            <th>Branch</th>
+                            <th>Status</th>
+                            <th>Entry Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in all_rooms[3] %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ student.name }}</td>
+                            <td>{{ student.roll_no }}</td>
+                            <td>{{ student.branch }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if student.status == 'PRESENT' %}badge-present
+                                    {% elif student.status == 'OUT (WASHROOM)' %}badge-out
+                                    {% else %}badge-absent{% endif %}">
+                                    {% if student.status == 'PRESENT' %}✅ Present
+                                    {% elif student.status == 'OUT (WASHROOM)' %}🚻 Washroom
+                                    {% else %}❌ Not Arrived{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ student.entry_time or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Washroom Section -->
+        <div class="section">
+            <div class="section-title">
+                <span>🚻 Room 3 — Washroom Log</span>
+                <button class="print-btn" onclick="printSection('right-room-3-washroom')">
+                    🖨 Print
+                </button>
+            </div>
+            <div id="right-room-3-washroom">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Branch</th>
+                            <th>Out Time</th>
+                            <th>In Time</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in washroom_logs[3] %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ log.name }}</td>
+                            <td>{{ log.branch }}</td>
+                            <td>{{ log.out_time }}</td>
+                            <td>{{ log.in_time or 'Still Outside' }}</td>
+                            <td>{{ log.duration or '—' }}</td>
+                            <td>
+                                <span class="badge {{ 'badge-present' if log.status == 'IN' else 'badge-out' }}">
+                                    {{ '✅ Returned' if log.status == 'IN' else '🚻 Outside' }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="no-data">
+                                Koi washroom record nahi aaj ke liye
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Room 4 Content -->
+    <div class="room-content" id="right-room-4">
+
+        <!-- Attendance Section -->
+        <div class="section">
+            <div class="section-title">
+                <span>📋 Room 4 — Attendance Record</span>
+                <button class="print-btn" onclick="printSection('right-room-4-attendance')">
+                    🖨 Print
+                </button>
+            </div>
+            <div id="right-room-4-attendance">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Roll No</th>
+                            <th>Branch</th>
+                            <th>Status</th>
+                            <th>Entry Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in all_rooms[4] %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ student.name }}</td>
+                            <td>{{ student.roll_no }}</td>
+                            <td>{{ student.branch }}</td>
+                            <td>
+                                <span class="badge
+                                    {% if student.status == 'PRESENT' %}badge-present
+                                    {% elif student.status == 'OUT (WASHROOM)' %}badge-out
+                                    {% else %}badge-absent{% endif %}">
+                                    {% if student.status == 'PRESENT' %}✅ Present
+                                    {% elif student.status == 'OUT (WASHROOM)' %}🚻 Washroom
+                                    {% else %}❌ Not Arrived{% endif %}
+                                </span>
+                            </td>
+                            <td>{{ student.entry_time or '—' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Washroom Section -->
+        <div class="section">
+            <div class="section-title">
+                <span>🚻 Room 4 — Washroom Log</span>
+                <button class="print-btn" onclick="printSection('right-room-4-washroom')">
+                    🖨 Print
+                </button>
+            </div>
+            <div id="right-room-4-washroom">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Branch</th>
+                            <th>Out Time</th>
+                            <th>In Time</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in washroom_logs[4] %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ log.name }}</td>
+                            <td>{{ log.branch }}</td>
+                            <td>{{ log.out_time }}</td>
+                            <td>{{ log.in_time or 'Still Outside' }}</td>
+                            <td>{{ log.duration or '—' }}</td>
+                            <td>
+                                <span class="badge {{ 'badge-present' if log.status == 'IN' else 'badge-out' }}">
+                                    {{ '✅ Returned' if log.status == 'IN' else '🚻 Outside' }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="no-data">
+                                Koi washroom record nahi aaj ke liye
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Main Tab Switch
+    function showSide(side) {
+        // All main tabs inactive
+        document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.side-content').forEach(c => c.classList.remove('active'));
+
+        // Active tab
+        event.target.classList.add('active');
+        document.getElementById('side-' + side).classList.add('active');
+    }
+
+    // Room Sub-Tab Switch 
+    function showRoom(side, roomId) {
+        // Get parent side content
+        let sideEl = document.getElementById('side-' + side);
+
+        // Deactivate all room tabs in this side
+        sideEl.querySelectorAll('.room-tab').forEach(t => t.classList.remove('active'));
+        sideEl.querySelectorAll('.room-content').forEach(c => c.classList.remove('active'));
+
+        // Activate clicked tab
+        event.target.classList.add('active');
+        document.getElementById(side + '-room-' + roomId).classList.add('active');
+    }
+
+    // Print Section 
+    function printSection(sectionId) {
+        let content = document.getElementById(sectionId).innerHTML;
+        let printWindow = window.open('', '_blank');
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>SmartPresence Report</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 20px; }
+                    h2 { color: #1a1a2e; margin-bottom: 15px; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th { background: #1a1a2e; color: white; padding: 10px; text-align: left; }
+                    td { padding: 8px 10px; border-bottom: 1px solid #ddd; }
+                    .badge { padding: 3px 8px; border-radius: 4px; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                <h2>SmartPresence — IIT Indore</h2>
+                <p>Date: ${new Date().toLocaleDateString()} | Time: ${new Date().toLocaleTimeString()}</p>
+                <br>
+                ${content}
+            </body>
+            </html>
+        `);
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    //  Live Update 
+    function updateAdmin() {
+        fetch('/api/admin/status')
+            .then(res => res.json())
+            .then(data => {
+                // Stats
+                document.getElementById('stat-present').innerText  = data.present;
+                document.getElementById('stat-washroom').innerText = data.washroom;
+                document.getElementById('stat-absent').innerText   = data.absent;
+
+                // Side counters
+                let left = document.getElementById('left-counter');
+                left.innerText = 'LEFT SIDE: ' + data.outside_left + '/2 students bahar';
+                left.className = 'side-counter ' + (data.outside_left == 0 ? 'safe' : data.outside_left == 1 ? 'warning' : 'danger');
+
+                let right = document.getElementById('right-counter');
+                right.innerText = 'RIGHT SIDE: ' + data.outside_right + '/2 students bahar';
+                right.className = 'side-counter ' + (data.outside_right == 0 ? 'safe' : data.outside_right == 1 ? 'warning' : 'danger');
+
+                // Time
+                let now = new Date();
+                document.getElementById('last-updated').innerText =
+                    'Updated: ' + now.getHours() + ':' +
+                    String(now.getMinutes()).padStart(2, '0') + ':' +
+                    String(now.getSeconds()).padStart(2, '0');
+            })
+            .catch(err => console.log('Update error:', err));
+    }
+
+    setInterval(updateAdmin, 5000);
+</script>
+
+</body>
+</html>
